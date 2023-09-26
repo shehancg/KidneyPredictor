@@ -95,34 +95,6 @@ def get_kidney_recommendations():
 def hello_world():
     return 'Hello,'
 
-""" @app.route('/addData', methods=['POST'])
-def add_data():
-    if request.method == 'POST':
-        # Retrieve the data sent in the request
-        data = request.json  # Assuming the data is sent as JSON
-
-        # Open the CSV file in append mode and write the new data
-        with open('clean_data2.csv', 'a', newline='') as csv_file:
-            fieldnames = ['Id', 'age', 'race', 'sex', 'Blood_type', 'HLA_A1', 'HLA_A2', 'HLA_B1', 'HLA_B2',
-                          'HLA_DR1', 'HLA_DR2', 'anti_HBc', 'anti_HCV', 'agHBs']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
-            # Generate a new unique ID for the added data (you may want to implement this differently)
-            new_id = max(kidney_data['Id']) + 1
-
-            # Add the new data to the CSV file
-            data['Id'] = new_id
-            writer.writerow(data)
-
-        # Return a JSON response indicating success
-        response_data = {'message': 'Data Added successfully', 'id': new_id}
-        return jsonify(response_data), 200  # 200 indicates success
-
-    # Return a JSON response for invalid requests
-    response_data = {'message': 'Invalid request'}
-    return jsonify(response_data), 400  # 400 indicates a bad request
- """
-
 # Load your dataset from S3
 response = s3.get_object(Bucket=bucket_name, Key=file_name)
 csv_data = response['Body'].read().decode('utf-8')
