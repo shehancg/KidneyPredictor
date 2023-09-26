@@ -3,8 +3,12 @@ import pandas as pd
 import numpy as np
 import csv
 import boto3
+import dotenv
+from io import StringIO
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+dotenv.load_dotenv()
 
 app = Flask(__name__)
 
@@ -14,10 +18,7 @@ bucket_name = 'flaskapp1'
 file_name = 'clean_data2.csv'
 
 response = s3.get_object(Bucket=bucket_name, Key=file_name)
-
-# Load your dataset
-# Replace 'your_dataset.csv' with your actual file
-kidney_data = pd.read_csv('clean_data2.csv')
+kidney_data = pd.read_csv(response['Body'])
 
 # Encode categorical variables (Label Encoding)
 label_encoder = LabelEncoder()
@@ -94,7 +95,7 @@ def get_kidney_recommendations():
 def hello_world():
     return 'Hello,'
 
-@app.route('/addData', methods=['POST'])
+""" @app.route('/addData', methods=['POST'])
 def add_data():
     if request.method == 'POST':
         # Retrieve the data sent in the request
@@ -112,6 +113,43 @@ def add_data():
             # Add the new data to the CSV file
             data['Id'] = new_id
             writer.writerow(data)
+
+        # Return a JSON response indicating success
+        response_data = {'message': 'Data Added successfully', 'id': new_id}
+        return jsonify(response_data), 200  # 200 indicates success
+
+    # Return a JSON response for invalid requests
+    response_data = {'message': 'Invalid request'}
+    return jsonify(response_data), 400  # 400 indicates a bad request
+ """
+
+# Load your dataset from S3
+response = s3.get_object(Bucket=bucket_name, Key=file_name)
+csv_data = response['Body'].read().decode('utf-8')
+kidney_data = pd.read_csv(StringIO(csv_data))
+
+@app.route('/addData', methods=['POST'])
+def add_data_new():
+    global kidney_data
+    if request.method == 'POST':
+        # Retrieve the data sent in the request
+        data = request.json  # Assuming the data is sent as JSON
+
+        # Generate a new unique ID for the added data (you may want to implement this differently)
+        new_id = max(kidney_data['Id']) + 1
+
+        # Create a new DataFrame for the data to be added
+        new_data = pd.DataFrame(data, index=[0])
+        new_data['Id'] = new_id
+
+        # Concatenate the new data with the existing kidney_data DataFrame
+        kidney_data = pd.concat([kidney_data, new_data], ignore_index=True)
+
+        # Convert the updated DataFrame to CSV format
+        updated_csv_data = kidney_data.to_csv(index=False)
+        
+        # Upload the updated CSV data back to S3
+        s3.put_object(Body=updated_csv_data, Bucket=bucket_name, Key=file_name)
 
         # Return a JSON response indicating success
         response_data = {'message': 'Data Added successfully', 'id': new_id}
