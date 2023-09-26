@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 dotenv.load_dotenv()
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 s3 = boto3.client('s3')
 
@@ -40,7 +40,7 @@ model = NearestNeighbors(n_neighbors=k, metric='euclidean')  # You can choose di
 model.fit(X)
 
 
-@app.route('/predict', methods=['POST'])
+@application.route('/predict', methods=['POST'])
 def get_kidney_recommendations():
     if request.method == 'POST':
         # Retrieve user-entered donor kidney information from JSON
@@ -91,7 +91,7 @@ def get_kidney_recommendations():
     # Render the initial form page
     return render_template('index.html')
 
-@app.route('/')
+@application.route('/')
 def hello_world():
     return 'Hello,'
 
@@ -100,7 +100,7 @@ response = s3.get_object(Bucket=bucket_name, Key=file_name)
 csv_data = response['Body'].read().decode('utf-8')
 kidney_data = pd.read_csv(StringIO(csv_data))
 
-@app.route('/addData', methods=['POST'])
+@application.route('/addData', methods=['POST'])
 def add_data_new():
     global kidney_data
     if request.method == 'POST':
@@ -133,4 +133,4 @@ def add_data_new():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    application.run(debug=True)
