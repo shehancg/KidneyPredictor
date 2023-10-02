@@ -101,17 +101,25 @@ csv_data = response['Body'].read().decode('utf-8')
 kidney_data = pd.read_csv(StringIO(csv_data))
 
 @application.route('/addData', methods=['POST'])
-def add_data_new():
-    global kidney_data
+def add_data():
+    global kidney_data  # Declare kidney_data as a global variable
+
     if request.method == 'POST':
         # Retrieve the data sent in the request
         data = request.json  # Assuming the data is sent as JSON
 
-        # Generate a new unique ID for the added data (you may want to implement this differently)
-        new_id = max(kidney_data['Id']) + 1
+        # Check if 'Id' is present in the data
+        if 'Id' not in data:
+            return jsonify({'message': 'Id is required in the input data'}), 400
 
-        # Create a new DataFrame for the data to be added
+        # Extract 'Id' from the data
+        new_id = data['Id']
+
+        # Create a new DataFrame for the data to be added (excluding 'Id')
         new_data = pd.DataFrame(data, index=[0])
+        new_data.drop(columns=['Id'], inplace=True)  # Exclude 'Id' from the new data
+
+        # Add the 'Id' to the new data
         new_data['Id'] = new_id
 
         # Concatenate the new data with the existing kidney_data DataFrame
@@ -119,7 +127,7 @@ def add_data_new():
 
         # Convert the updated DataFrame to CSV format
         updated_csv_data = kidney_data.to_csv(index=False)
-        
+
         # Upload the updated CSV data back to S3
         s3.put_object(Body=updated_csv_data, Bucket=bucket_name, Key=file_name)
 
@@ -131,6 +139,27 @@ def add_data_new():
     response_data = {'message': 'Invalid request'}
     return jsonify(response_data), 400  # 400 indicates a bad request
 
+
+@application.route('/get_last_rows', methods=['GET'])
+def get_last_rows():
+    # Retrieve the last 5 rows of the kidney_data DataFrame
+    last_5_rows = kidney_data.tail(5).to_dict(orient='records')
+
+    # Return the last 5 rows as JSON
+    return jsonify(last_5_rows)
+
+@application.route('/get_data_by_id/<int:id>', methods=['GET'])
+def get_data_by_id(id):
+    # Check if the given 'id' exists in the 'Id' column of the DataFrame
+    if id in kidney_data['Id'].values:
+        # Retrieve data for the specified 'id'
+        data = kidney_data[kidney_data['Id'] == id].to_dict(orient='records')[0]
+
+        # Return the data as JSON
+        return jsonify(data)
+    else:
+        # Return a 404 error if 'id' is not found
+        return jsonify({'message': f'Data for ID {id} not found'}), 404
 
 if __name__ == '__main__':
     application.run(debug=True)
