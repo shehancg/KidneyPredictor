@@ -101,7 +101,7 @@ csv_data = response['Body'].read().decode('utf-8')
 kidney_data = pd.read_csv(StringIO(csv_data))
 
 @application.route('/addData', methods=['POST'])
-def add_data():
+def add_data_new():
     global kidney_data  # Declare kidney_data as a global variable
 
     if request.method == 'POST':
@@ -114,6 +114,10 @@ def add_data():
 
         # Extract 'Id' from the data
         new_id = data['Id']
+
+        # Check if the same 'Id' already exists in the kidney_data DataFrame
+        if new_id in kidney_data['Id'].values:
+            return jsonify({'message': 'ID already exists in the dataset'}), 400
 
         # Create a new DataFrame for the data to be added (excluding 'Id')
         new_data = pd.DataFrame(data, index=[0])
@@ -138,6 +142,7 @@ def add_data():
     # Return a JSON response for invalid requests
     response_data = {'message': 'Invalid request'}
     return jsonify(response_data), 400  # 400 indicates a bad request
+
 
 
 @application.route('/get_last_rows', methods=['GET'])
