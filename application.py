@@ -15,7 +15,7 @@ application = Flask(__name__)
 s3 = boto3.client('s3')
 
 bucket_name = 'flaskapp1'
-file_name = 'clean_data2.csv'
+file_name = 'clean_data.csv'
 
 response = s3.get_object(Bucket=bucket_name, Key=file_name)
 kidney_data = pd.read_csv(response['Body'])
