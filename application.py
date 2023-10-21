@@ -93,7 +93,7 @@ def get_kidney_recommendations():
 
 @application.route('/')
 def hello_world():
-    return 'Hello,'
+    return 'Hello,World'
 
 # Load your dataset from S3
 response = s3.get_object(Bucket=bucket_name, Key=file_name)
